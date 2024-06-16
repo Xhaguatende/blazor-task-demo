@@ -1,0 +1,68 @@
+﻿@attribute [Route(NavigationRoutes.ScheduleTaskListRoute)]
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+@inject IScheduleTaskServices ScheduleTaskServices
+
+<PageTitle>Scheduled Tasks</PageTitle>
+<h3>Scheduled Tasks</h3>
+
+<div class="mt-2 mb-2">
+    <a class="btn btn-primary" role="button" href="@NavigationRoutes.ScheduleTaskCreateRoute">New Schedule Task</a>
+</div>
+
+@if (_scheduleTasks == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Title</th>
+                <th>Priority</th>
+                <th>Due Date</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var scheduleTask in _scheduleTasks)
+            {
+                <tr>
+                    <td>@scheduleTask.Category</td>
+                    <td>@scheduleTask.Title</td>
+                    <td>@scheduleTask.Priority</td>
+                    <td>@scheduleTask.DueDate.ToString("dd-MM-yyyy")</td>
+                    <td>
+                        <div class="d-flex">
+                            <a class="btn btn-primary me-2" role="button" href="@ScheduleTaskUrl(scheduleTask.Id)">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<ScheduleTaskRowModel>? _scheduleTasks = [];
+
+    private readonly CancellationTokenSource _cts = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _scheduleTasks = await ScheduleTaskServices.GetAllTasksAsync(_cts.Token);
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    private static string ScheduleTaskUrl(Guid id) => $"{NavigationRoutes.ScheduleTaskEditRoute}/{id}";
+}
